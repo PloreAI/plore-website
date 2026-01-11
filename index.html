@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plore</title>
+    <link rel="icon" type="image/png" href="plore-icon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white h-screen overflow-hidden">
+    <!-- API Key Dialog -->
+    <div id="apiDialog" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center z-50">
+        <div class="absolute inset-0 bg-grid opacity-20"></div>
+        <div class="relative bg-slate-800/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-700/50 animate-fade-in">
+            <div class="flex items-center justify-center mb-6">
+                <img src="Plore-icon.png" alt="Plore" class="w-16 h-16 rounded-2xl shadow-lg">
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2 text-center">Welcome to Plore</h2>
+            <p class="text-slate-400 mb-6 text-center">Enter your OpenRouter API key to get started</p>
+            <input
+                id="apiKeyInput"
+                type="password"
+                placeholder="sk-or-v1-..."
+                class="w-full bg-slate-700/50 text-white rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-slate-500"
+            />
+            <button
+                onclick="saveApiKey()"
+                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+            >
+                Continue
+            </button>
+            <p class="text-slate-500 text-sm mt-4 text-center">
+                Don't have an API key? <a href="https://openrouter.ai" target="_blank" class="text-blue-400 hover:text-blue-300">Get one here</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Settings Dialog -->
+    <div id="settingsDialog" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-800 rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-700">
+            <h2 class="text-3xl font-bold text-white mb-6">Settings</h2>
+            
+            <h1>NOTHING TO SEE HERE</h1>
+            <p>There are settings being added right now...</p>
+            
+            <div class="flex gap-3">
+                <button
+                    onclick="saveSettings()"
+                    class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                    Save Settings
+                </button>
+                <button
+                    onclick="closeSettings()"
+                    class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-xl transition-all"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="flex h-screen hidden">
+        <div class="fixed inset-0 bg-grid opacity-20"></div>
+        
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-72 bg-slate-900/50 backdrop-blur-xl transition-all duration-300 flex flex-col border-r border-slate-700/50 relative z-10">
+            <div class="p-4 border-b border-slate-700/50">
+                <button
+                    onclick="newChat()"
+                    class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                >
+                    <span class="text-xl">+</span>
+                    New Chat
+                </button>
+            </div>
+            
+            <div id="conversationList" class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+                <!-- Conversations will be added here -->
+            </div>
+            
+            <div class="p-4 border-t border-slate-700/50">
+                <button
+                    onclick="openSettings()"
+                    class="w-full bg-slate-700/50 hover:bg-slate-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-all"
+                >
+                    ⚙️ Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="flex-1 flex flex-col relative z-10">
+            <!-- Header -->
+            <div class="bg-slate-900/50 backdrop-blur-xl border-b border-slate-700/50 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button
+                        onclick="toggleSidebar()"
+                        class="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-lg"
+                    >
+                        ☰
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <img src="Plore-icon.png" alt="Plore" class="w-10 h-10 rounded-xl shadow-lg">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 text-transparent bg-clip-text">Plore</h1>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <select
+                        id="modelSelect"
+                        class="bg-slate-700/50 text-white rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm cursor-pointer hover:bg-slate-700"
+                    >
+                        <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="openai/gpt-4">GPT-4</option>
+                        <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
+                        <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
+                        <option value="mistralai/mistral-7b-instruct">Mistral 7B</option>
+                        <option value="google/gemini-pro">Gemini Pro</option>
+                    </select>
+                    
+                    <button
+                        onclick="clearChat()"
+                        class="bg-slate-700/50 hover:bg-slate-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all"
+                    >
+                        🗑️ Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto px-6 py-6">
+                <div id="welcomeScreen" class="flex items-center justify-center h-full">
+                    <div class="text-center max-w-2xl animate-fade-in">
+                        <img src="plore-icon.png" alt="Plore" class="w-20 h-20 rounded-3xl shadow-2xl mx-auto mb-6">
+                        <h2 class="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">Welcome to Plore</h2>
+                        <p class="text-slate-400 text-lg">Start a conversation and let AI assist you</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="bg-slate-900/50 backdrop-blur-xl border-t border-slate-700/50 px-6 py-4">
+                <div class="max-w-4xl mx-auto">
+                    <div class="relative bg-slate-800/50 rounded-2xl border border-slate-700/50 focus-within:border-blue-500/50 transition-all shadow-lg">
+                        <textarea
+                            id="messageInput"
+                            placeholder="Type your message..."
+                            class="w-full bg-transparent text-white rounded-2xl px-6 py-4 pr-14 resize-none focus:outline-none placeholder-slate-500"
+                            rows="3"
+                        ></textarea>
+                        <button
+                            onclick="sendMessage()"
+                            id="sendButton"
+                            class="absolute right-3 bottom-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                        >
+                            ➤
+                        </button>
+                    </div>
+                    <p class="text-slate-500 text-xs text-center mt-3">
+                        Press Enter to send • Shift + Enter for new line
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiKey = '';
+        let systemPrompt = 'You are Plore, the best AI assistant/agent. You help users write, debug, and explain code. You provide clear, well-commented code examples. You understand multiple programming languages and frameworks. When asked to code, provide complete, working solutions with explanations. You help users with images, whether it is generating or analyzing, you do it.';
+        let messages = [];
+        let conversations = [];
+        let isLoading = false;
+
+        // Load saved data
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('plore_api_key');
+            if (saved) {
+                apiKey = saved;
+                document.getElementById('apiDialog').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+            }
+            
+            const savedPrompt = localStorage.getItem('plore_system_prompt');
+            if (savedPrompt) systemPrompt = savedPrompt;
+            
+            const savedConvs = localStorage.getItem('plore_conversations');
+            if (savedConvs) conversations = JSON.parse(savedConvs);
+            
+            refreshConversationList();
+
+            // Enter to send
+            document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Enter on API key input
+            document.getElementById('apiKeyInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveApiKey();
+            });
+        });
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                apiKey = key;
+                localStorage.setItem('plore_api_key', key);
+                document.getElementById('apiDialog').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('systemPromptInput').value = systemPrompt;
+            document.getElementById('settingsApiKeyInput').value = apiKey;
+            document.getElementById('settingsDialog').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsDialog').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            systemPrompt = document.getElementById('systemPromptInput').value;
+            apiKey = document.getElementById('settingsApiKeyInput').value;
+            localStorage.setItem('plore_system_prompt', systemPrompt);
+            localStorage.setItem('plore_api_key', apiKey);
+            closeSettings();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('w-0');
+            sidebar.classList.toggle('w-72');
+        }
+
+        function newChat() {
+            if (messages.length > 0) saveConversation();
+            messages = [];
+            document.getElementById('chatMessages').innerHTML = `
+                <div id="welcomeScreen" class="flex items-center justify-center h-full">
+                    <div class="text-center max-w-2xl animate-fade-in">
+                        <img src="Plore-icon.png" alt="Plore" class="w-20 h-20 rounded-3xl shadow-2xl mx-auto mb-6">
+                        <h2 class="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">Welcome to Plore</h2>
+                        <p class="text-slate-400 text-lg">Start a conversation and let AI assist you</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearChat() {
+            messages = [];
+            document.getElementById('chatMessages').innerHTML = `
+                <div id="welcomeScreen" class="flex items-center justify-center h-full">
+                    <div class="text-center max-w-2xl animate-fade-in">
+                        <img src="Plore-icon.png" alt="Plore" class="w-20 h-20 rounded-3xl shadow-2xl mx-auto mb-6">
+                        <h2 class="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">Welcome to Plore</h2>
+                        <p class="text-slate-400 text-lg">Start a conversation and let AI assist you</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveConversation() {
+            if (messages.length === 0) return;
+            
+            const conv = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                messages: [...messages],
+                title: messages[0]?.content.substring(0, 50) + (messages[0]?.content.length > 50 ? '...' : '')
+            };
+            
+            conversations.unshift(conv);
+            localStorage.setItem('Plore_conversations', JSON.stringify(conversations));
+            refreshConversationList();
+        }
+
+        function refreshConversationList() {
+            const list = document.getElementById('conversationList');
+            list.innerHTML = conversations.map(conv => `
+                <button
+                    onclick="loadConversation(${conv.id})"
+                    class="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all text-sm text-slate-300 hover:text-white group"
+                >
+                    <div class="flex items-center gap-2">
+                        <span class="truncate">${conv.title}</span>
+                    </div>
+                </button>
+            `).join('');
+        }
+
+        function loadConversation(id) {
+            const conv = conversations.find(c => c.id === id);
+            if (conv) {
+                messages = [...conv.messages];
+                renderMessages();
+            }
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = messages.map(msg => `
+                <div class="mb-6 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up">
+                    <div class="max-w-3xl rounded-2xl px-6 py-4 shadow-lg ${
+                        msg.role === 'user'
+                            ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
+                            : 'bg-slate-800/70 backdrop-blur-sm text-slate-100 border border-slate-700/50'
+                    }">
+                        <div class="font-bold mb-2 text-sm opacity-75">
+                            ${msg.role === 'user' ? 'You' : 'Plore'}
+                        </div>
+                        <div class="whitespace-pre-wrap leading-relaxed">${msg.content}</div>
+                    </div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            if (isLoading) return;
+            
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !apiKey) return;
+            
+            const userMessage = { role: 'user', content: message };
+            messages.push(userMessage);
+            input.value = '';
+            
+            renderMessages();
+            
+            // Show loading
+            isLoading = true;
+            const container = document.getElementById('chatMessages');
+            container.innerHTML += `
+                <div id="loadingMsg" class="flex justify-start mb-6 animate-slide-up">
+                    <div class="bg-slate-800/70 backdrop-blur-sm rounded-2xl px-6 py-4 border border-slate-700/50 shadow-lg">
+                        <div class="font-bold mb-2 text-sm opacity-75">Plore</div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <div class="flex gap-1">
+                                <div class="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                                <div class="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                                <div class="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                            </div>
+                            <span class="text-sm">Thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: document.getElementById('modelSelect').value,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            ...messages
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const assistantMessage = {
+                        role: 'assistant',
+                        content: data.choices[0].message.content
+                    };
+                    messages.push(assistantMessage);
+                } else {
+                    messages.push({
+                        role: 'assistant',
+                        content: `Error: ${data.error?.message || 'Unknown error occurred'}`
+                    });
+                }
+            } catch (error) {
+                messages.push({
+                    role: 'assistant',
+                    content: `Error: ${error.message}`
+                });
+            } finally {
+                isLoading = false;
+                renderMessages();
+                input.focus();
+            }
+        }
+    </script>
+</body>
+</html>
